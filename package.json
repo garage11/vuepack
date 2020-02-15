@@ -1,0 +1,14 @@
+{
+  "name": "@garage11/vuepack",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Vue Template to ESM compiler",
+  "main": "index.js",
+  "author": "Garage11",
+  "license": "MIT",
+  "repository": "https://github.com/garage11/vuepack",
+  "dependencies": {
+    "vue-template-compiler": "2.6.11",
+    "vue-template-es2015-compiler": "1.9.1"
+  }
+}
