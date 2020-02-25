@@ -11,29 +11,38 @@ export default class VuePack {
         this.options = options
     }
 
+    capitalize(s) {
+        return s.charAt(0).toUpperCase() + s.slice(1)
+    }
+
+
     toFunction(code) {
         return transpile(`function r(){${code}}`)
     }
 
     /**
-     * Generates template names based on its path
-     * and filename. Use path filtering to filter
-     * out unwanted directory parts.
+     * Generates a template/component names based on the
+     * path of the filename. A path filter can be used
+     * to trim down on unwanted path elements.
      * @param {String} filename - Path to a template
      * @returns {String} - The generated template name
      */
     fileToTemplateName(filename) {
-        let templateNameParts = []
-        let tmpName = filename.replace(path.extname(filename), '').replace(/-/g, '_')
-        for (let part of tmpName.split('/')) {
+        let parts = []
+        // Remove file extension.
+        // let tmpName = filename.replace(path.extname(filename), '')
+        for (let part of filename.replace(path.extname(filename), '').split('/')) {
             if (part !== '.' && !this.options.pathfilter.includes(part)) {
-                templateNameParts.push(part)
+                part = part.split('-').map((p) => this.capitalize(p)).join('')
+                parts.push(part)
             }
         }
+
         // Filter out double names.
-        templateNameParts = templateNameParts.filter((value, index, self) => self.indexOf(value) === index)
-        let templateName = templateNameParts.join('_')
-        return templateName
+        parts = parts.filter((value, index, self) => self.indexOf(value) === index)
+        parts = parts.map((part) => this.capitalize(part))
+
+        return parts.join('')
     }
 
     async compile(filenames) {
@@ -43,7 +52,9 @@ export default class VuePack {
             const templateData = readFiles[i]
             const templateName = this.fileToTemplateName(filename)
 
-            let compiled = compiler.compile(templateData, this.options.vue)
+            let compiled = compiler.compile(templateData, {
+                preserveWhitespace: false,
+            })
             if (compiled.errors.length) throw compiled.errors.join(',')
             let jsTemplate = `_.${templateName}={r:${this.toFunction(compiled.render)}`
             if (compiled.staticRenderFns.length) {
