@@ -1,10 +1,10 @@
 # vuepack
 
-Vuepack is a simple wrapper around the Vue 2 template compiler.
-
-It generates an ECMAScript module from a glob of Vue templates,
-making it simple to include Vue in any JavaScript build process.
-No need for slow and complex tooling.
+Vuepack is a simple component compiler for Vue 2 that plays nice
+with ESM imports and Snowpack. It generates templates and component
+imports from a glob of Vue components, making it simple to include Vue
+in any JavaScript build process. Vuepack is meant as an alternative to
+Single File Components.
 
 ## Usage
 
