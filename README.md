@@ -8,12 +8,12 @@ Single File Components.
 
 ## Usage
 
-Checkout [vuepack-demo](https://github.com/garage11/vuepack-demo) for an
-example JavaScript project build that uses Vuepack. Basically,
+Checkout [vuepack-demo](https://github.com/open-voip-alliance/ca11/blob/master/cli.js)
+for an example JavaScript project build that uses Vuepack. Basically,
 this is all there is to it:
 
 ```bash
-yarn add globby @garage11/vuepack
+yarn add globby @garage11/vuepack --dev
 ```
 
 ```javascript
@@ -22,13 +22,15 @@ import globby from 'globby'
 import VuePack from '@garage11/vuepack'
 
 const vuePack = new VuePack({
+    importFilter: ['src'],
     pathfilter: ['src', 'components'],
-    vue: {
-        preserveWhitespace: false,
-    }
 })
 
-const targets = await globby(['./src/components/**/*.vue'])
+const {components, templates} = await globby(['./src/components/**/*.vue'])
 const result = await vuePack.compile(targets)
-await fs.writeFile('./src/js/templates.js', result)
+await Promise.all([
+    fs.writeFile(path.join('build', 'components.js'), components),
+    fs.writeFile(path.join('build', 'templates.js'), templates),
+    fs.writeFile(path.join('src', 'templates.js'), templates),
+])
 ```
