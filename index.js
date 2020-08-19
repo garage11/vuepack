@@ -8,6 +8,7 @@ import transpile from 'vue-template-es2015-compiler'
 export default class VuePack {
 
     constructor(options) {
+        this.cache = {}
         this.options = {
             basePath: '/',
             excludeTokens: [],
@@ -21,26 +22,34 @@ export default class VuePack {
     }
 
 
-    async compile(filenames) {
+    async compile(vueFiles, updatedVueFile = null) {
         let templates = 'const _ = {};'
-        const readFiles = await Promise.all(filenames.map((filename) => fs.readFile(filename, 'utf8')))
+        const readFiles = await Promise.all(vueFiles.map((filename) => fs.readFile(filename, 'utf8')))
         let components = ''
         const componentNames = []
 
-        filenames.forEach((filename, i) => {
-            const componentName = this.toComponentName(filename)
+        for (const [i, vueFile] of vueFiles.entries()) {
+            const componentName = this.toComponentName(vueFile)
             componentNames.push(componentName)
-            components += `import ${componentName} from '${this.toBasePath(filename)}.js'\r\n`
-            const compiled = compiler.compile(readFiles[i], {preserveWhitespace: false})
+            components += `import ${componentName} from '${this.toBasePath(vueFile)}.js'\r\n`
 
+            // Cache if the Vue-file was compiled earlier, unless an incremental
+            // vue file build is triggered with `updatedVueFile`.
+            if (this.cache[vueFile] && (!updatedVueFile || vueFile !== updatedVueFile)) {
+                templates += this.cache[vueFile]
+                continue
+            }
+
+            const compiled = compiler.compile(readFiles[i], {preserveWhitespace: false})
             if (compiled.errors.length) throw compiled.errors.join(',')
             let jsTemplate = `_.${componentName}={r:${this.toFunction(compiled.render)}`
             if (compiled.staticRenderFns.length) {
                 jsTemplate += `,s:[${compiled.staticRenderFns.map(this.toFunction).join(',')}]};`
             } else jsTemplate += '};'
 
+            this.cache[vueFile] = jsTemplate
             templates += jsTemplate
-        })
+        }
 
         components += `export default {${componentNames.join(', ')}}`
         templates += 'export default _'
