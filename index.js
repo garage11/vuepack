@@ -8,7 +8,11 @@ import transpile from 'vue-template-es2015-compiler'
 export default class VuePack {
 
     constructor(options) {
-        this.options = options
+        this.options = {
+            basePath: '/',
+            excludeTokens: [],
+        }
+        Object.assign(this.options, options)
     }
 
 
@@ -22,17 +26,13 @@ export default class VuePack {
         const readFiles = await Promise.all(filenames.map((filename) => fs.readFile(filename, 'utf8')))
         let components = ''
         const componentNames = []
+
         filenames.forEach((filename, i) => {
-            const templateData = readFiles[i]
-            const componentName = this.fileToComponentName(filename, this.options.pathFilter)
-            const importPath = this.fileToImportPath(filename, this.options.importFilter)
+            const componentName = this.toComponentName(filename)
             componentNames.push(componentName)
+            components += `import ${componentName} from '${this.toBasePath(filename)}.js'\r\n`
+            const compiled = compiler.compile(readFiles[i], {preserveWhitespace: false})
 
-            components += `import ${componentName} from '${importPath}'\r\n`
-
-            let compiled = compiler.compile(templateData, {
-                preserveWhitespace: false,
-            })
             if (compiled.errors.length) throw compiled.errors.join(',')
             let jsTemplate = `_.${componentName}={r:${this.toFunction(compiled.render)}`
             if (compiled.staticRenderFns.length) {
@@ -43,45 +43,30 @@ export default class VuePack {
         })
 
         components += `export default {${componentNames.join(', ')}}`
-
         templates += 'export default _'
         return {components, templates}
     }
 
 
-    /**
-     * Generate a component name based on the path of the filename.
-     * A path filter is used to trim down unwanted path parts.
-     * @param {String} filename - Path to a template
-     * @returns {String} - The generated template name
-     */
-    fileToComponentName(filename) {
-        let parts = this.filter(filename, this.options.pathFilter, true)
-        // Filter out double names.
-        parts = parts.filter((value, index, self) => self.indexOf(value) === index)
-        parts = parts.map((part) => this.capitalize(part))
-        return parts.join('')
+    toBasePath(filename) {
+        return filename.replace(this.options.basePath, '').replace(path.extname(filename), '')
     }
 
 
-    fileToImportPath(filename) {
-        let parts = this.filter(filename, this.options.importFilter)
-        return `/${path.join(parts.join('/'))}.js`
-    }
-
-
-    filter(filename, filter, toPascalCase = false) {
-        let parts = []
-        for (let part of filename.replace(path.extname(filename), '').split('/')) {
-            if (part !== '.' && !filter.includes(part)) {
-                if (toPascalCase) {
-                    part = part.split('-').map((p) => this.capitalize(p)).join('')
-                }
-                parts.push(part)
+    toComponentName(filename) {
+        filename = this.toBasePath(filename)
+        let tokens = []
+        for (let token of filename.split('/')) {
+            if (token !== '.' && !this.options.excludeTokens.includes(token)) {
+                tokens.push(token)
             }
         }
 
-        return parts
+        // Tokenize 'foo-bar' tokens and capitalize them.
+        tokens = tokens.map((token) => token.split('-').map((p) => this.capitalize(p)).join(''))
+        // Remove duplicate tokens.
+        tokens = tokens.filter((v, i) => tokens.indexOf(v) === i)
+        return tokens.join('')
     }
 
 
