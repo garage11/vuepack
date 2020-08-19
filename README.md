@@ -14,9 +14,8 @@ for components; e.g.:
 
 ## Usage
 
-Checkout [vuepack-demo](https://github.com/open-voip-alliance/ca11/blob/master/cli.js)
-for an example JavaScript project build that uses Vuepack. Basically,
-this is all there is to it:
+Checkout the CA11 project [CLI](https://github.com/open-voip-alliance/ca11/blob/master/cli.js)
+for an example usage of Vuepack, or:
 
 ```bash
 yarn add globby @garage11/vuepack --dev
