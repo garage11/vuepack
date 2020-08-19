@@ -1,11 +1,9 @@
-# vuepack
+# Vuepack
 
-Vuepack is a simple component compiler for Vue 2 that plays nice
-with ESM imports and Snowpack. It generates templates and component
-imports from a glob of Vue components, making it simple to include Vue
-in any JavaScript build process. Vuepack is meant as an alternative to
-Single File Components. It expects the following directory conventions
-for components; e.g.:
+Vuepack is a non-SFC Vue compiler for Vue 2 that plays nice with ESM imports
+and Snowpack. It generates templates and component imports from a glob of
+Vue components, making it simple to include Vue in any JavaScript build
+process. It expects the following directory conventions for components; e.g.:
 
 ```bash
 /project/src/components/my-component/my-component.js
@@ -15,7 +13,7 @@ for components; e.g.:
 ## Usage
 
 Checkout the CA11 project [CLI](https://github.com/open-voip-alliance/ca11/blob/master/cli.js)
-for an example usage of Vuepack, or:
+on how you can integrate Vuepack in a custom CLI. To get started:
 
 ```bash
 yarn add globby @garage11/vuepack --dev
