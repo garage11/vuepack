@@ -24,13 +24,21 @@ import {promises as fs} from 'fs'
 import globby from 'globby'
 import VuePack from '@garage11/vuepack'
 
-const vuePack = new VuePack({
-    basePath: '/home/to/this/project/',
-    excludeTokens: ['src', 'components'],
-})
+...
+let vuePack
 
-const targets = await globby(['./src/components/**/*.vue'])
-const result = await vuePack.compile(targets)
+const vueFiles = await globby(['./src/components/**/*.vue'])
+const vueFileUpdated = './src/components/some-component/some-component.vue'
+
+// Keep the vuePack instance for incremental builds.
+if (!vuePack) {
+    vuePack = new VuePack({
+        basePath: '/home/to/this/project/',
+        excludeTokens: ['src', 'components'],
+    })
+}
+
+const {components, templates} = await vuePack.compile(vueFiles, vueFileUpdated)
 await Promise.all([
     fs.writeFile(path.join('build', 'components.js'), components),
     fs.writeFile(path.join('build', 'templates.js'), templates),
