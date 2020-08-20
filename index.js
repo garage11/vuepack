@@ -9,10 +9,21 @@ export default class VuePack {
 
     constructor(options) {
         this.cache = {}
+
         this.options = {
             basePath: '/',
             excludeTokens: [],
         }
+
+        this.results = {
+            changed: {
+                components: true,
+                templates: true
+            },
+            components: null,
+            templates: null,
+        }
+
         Object.assign(this.options, options)
     }
 
@@ -23,10 +34,12 @@ export default class VuePack {
 
 
     async compile(vueFiles, updatedVueFile = null) {
-        let templates = 'const _ = {};'
-        const readFiles = await Promise.all(vueFiles.map((filename) => fs.readFile(filename, 'utf8')))
+        vueFiles.sort()
         let components = ''
         const componentNames = []
+        const fileData = await Promise.all(vueFiles.map((filename) => fs.readFile(filename, 'utf8')))
+        let templates = 'const _ = {};'
+
 
         for (const [i, vueFile] of vueFiles.entries()) {
             const componentName = this.toComponentName(vueFile)
@@ -40,7 +53,7 @@ export default class VuePack {
                 continue
             }
 
-            const compiled = compiler.compile(readFiles[i], {preserveWhitespace: false})
+            const compiled = compiler.compile(fileData[i], {preserveWhitespace: false})
             if (compiled.errors.length) throw compiled.errors.join(',')
             let jsTemplate = `_.${componentName}={r:${this.toFunction(compiled.render)}`
             if (compiled.staticRenderFns.length) {
@@ -53,7 +66,16 @@ export default class VuePack {
 
         components += `export default {${componentNames.join(', ')}}`
         templates += 'export default _'
-        return {components, templates}
+
+        Object.assign(this.results, {
+            changed: {
+                components: (components !== this.results.components),
+                templates: (templates !== this.results.templates),
+            },
+            components,
+            templates
+        })
+        return this.results
     }
 
 
