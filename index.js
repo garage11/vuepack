@@ -44,7 +44,7 @@ export default class VuePack {
         for (const [i, vueFile] of vueFiles.entries()) {
             const componentName = this.toComponentName(vueFile)
             componentNames.push(componentName)
-            components += `import ${componentName} from '${this.toBasePath(vueFile)}.js'\r\n`
+            components += `import ${componentName} from '.${this.toBasePath(vueFile)}.js'\r\n`
 
             // Cache if the Vue-file was compiled earlier, unless an incremental
             // vue file build is triggered with `updatedVueFile`.
